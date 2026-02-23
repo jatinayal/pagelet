@@ -1,0 +1,165 @@
+### NotionClone API Test Endpoints
+### Use with REST Client VS Code extension
+
+@baseUrl = http://localhost:3000/api
+
+### ==================
+### AUTH ENDPOINTS
+### ==================
+
+### Register a new user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "password123"
+}
+
+###
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "email": "test@mail.com",
+    "password": "test123"
+}
+
+###
+
+### Get current user (requires login cookie)
+GET {{baseUrl}}/auth/me
+
+###
+
+### Logout
+POST {{baseUrl}}/auth/logout
+
+### ==================
+### PAGES ENDPOINTS
+### ==================
+
+###
+
+### Create a new page
+POST {{baseUrl}}/pages
+Content-Type: application/json
+
+{
+    "title": "My First Page"
+}
+
+###
+
+### Get all pages
+GET {{baseUrl}}/pages
+
+###
+
+### Get a specific page with blocks
+### Replace PAGE_ID with actual ID from create response
+GET {{baseUrl}}/pages/6985c797418186f819f578e7
+
+###
+
+### Update page title
+PATCH {{baseUrl}}/pages/PAGE_ID_HERE
+Content-Type: application/json
+
+{
+    "title": "Updated Page Title"
+}
+
+###
+
+### Delete a page
+DELETE {{baseUrl}}/pages/PAGE_ID_HERE
+
+### ==================
+### BLOCKS ENDPOINTS
+### ==================
+
+###
+
+### Create a paragraph block
+POST {{baseUrl}}/blocks
+Content-Type: application/json
+
+{
+    "pageId": "6985c797418186f819f578e7",
+    "type": "paragraph",
+    "content": { "text": "Hello, this is my first block!" }
+}
+
+###
+
+### Create a heading block
+POST {{baseUrl}}/blocks
+Content-Type: application/json
+
+{
+    "pageId": "6985c797418186f819f578e7",
+    "type": "heading1",
+    "content": { "text": "Welcome to NotionClone" }
+}
+
+###
+
+### Create a todo block
+POST {{baseUrl}}/blocks
+Content-Type: application/json
+
+{
+    "pageId": "6985c797418186f819f578e7",
+    "type": "todo",
+    "content": { "text": "Learn NotionClone", "checked": false }
+}
+
+###
+
+### Create a code block
+POST {{baseUrl}}/blocks
+Content-Type: application/json
+
+{
+    "pageId": "6985c797418186f819f578e7",
+    "type": "code",
+    "content": { 
+        "code": "function hello() {\n  console.log('Hello, World!');\n}",
+        "language": "javascript"
+    }
+}
+
+###
+
+### Update block content (auto-save style)
+### Replace BLOCK_ID with actual ID
+PATCH {{baseUrl}}/blocks/BLOCK_ID_HERE
+Content-Type: application/json
+
+{
+    "content": { "text": "Updated block content" }
+}
+
+###
+
+### Update todo checked state
+PATCH {{baseUrl}}/blocks/BLOCK_ID_HERE
+Content-Type: application/json
+
+{
+    "content": { "text": "Learn NotionClone", "checked": true }
+}
+
+###
+
+### Delete a block
+DELETE {{baseUrl}}/blocks/BLOCK_ID_HERE
+
+###
+
+### Health check (no auth required)
+GET {{baseUrl}}/health

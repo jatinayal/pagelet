@@ -1,26 +1,178 @@
 @import "tailwindcss";
 
+/**
+ * NotionClone Global Styles
+ * =========================
+ * 
+ * Dreamland Glassmorphism Theme
+ * Pastel palette: #ffffff, #D3F8E2, #E4C1F9, #F694C1, #EDE7B1, #A9DEF9
+ * Text: Deep neutral dark (#0f172a) for contrast
+ * 
+ * Atmosphere: Calm, airy, smooth - like writing in a pastel dream space
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    /* Primary Palette */
+    --color-white: #ffffff;
+    --color-mint: #D3F8E2;
+    --color-lavender: #E4C1F9;
+    --color-rose: #F694C1;
+    --color-cream: #EDE7B1;
+    --color-sky: #A9DEF9;
+
+    /* Text Colors */
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #334155;
+    --color-text-muted: #64748b;
+
+    /* Glassmorphism tokens */
+    --glass-bg: rgba(255, 255, 255, 0.25);
+    --glass-bg-light: rgba(255, 255, 255, 0.4);
+    --glass-bg-heavy: rgba(255, 255, 255, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-blur: 12px;
+    --glass-blur-heavy: 24px;
+
+    /* Pastel glass variants */
+    --glass-mint: rgba(211, 248, 226, 0.35);
+    --glass-lavender: rgba(228, 193, 249, 0.35);
+    --glass-rose: rgba(246, 148, 193, 0.35);
+    --glass-cream: rgba(237, 231, 177, 0.35);
+    --glass-sky: rgba(169, 222, 249, 0.35);
+
+    /* Shadows and glows */
+    --glow-soft: 0 4px 30px rgba(0, 0, 0, 0.05);
+    --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+    /* Background gradient */
+
+    /* Dot grid */
+    --dot-color: rgba(81, 88, 103, 0.025);
+    --dot-size: 0.25px;
+    --dot-spacing: 32px;
+
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+    --color-background: var(--color-white);
+    --color-foreground: var(--color-text-primary);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background-color: #edede9;
+    background-image: radial-gradient(circle,
+            rgba(15, 23, 42, 0.15) 1px,
+            transparent 1px);
+    background-size: 20px 20px;
+    background-attachment: fixed;
+    color: var(--color-text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+}
+
+/* Dot grid class kept for backwards compatibility but grid is now on body */
+.dot-grid-bg {
+    position: relative;
+}
+
+/* Glassmorphism card base */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    box-shadow: var(--glow-soft);
+}
+
+/* Heavier glass for sidebars/panels */
+.glass-panel {
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(var(--glass-blur-heavy));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: var(--glow-soft);
+}
+
+/* Light glass overlay */
+.glass-overlay {
+    background: var(--glass-bg-light);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+}
+
+/* Custom scrollbar - pastel themed */
+::-webkit-scrollbar {
+    display: none;
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.2);
+}
+
+/* Focus styles - pastel accent */
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid rgba(169, 222, 249, 0.7);
+    outline-offset: 2px;
+}
+
+/* Selection - pastel lavender */
+::selection {
+    background: rgba(228, 193, 249, 0.4);
+}
+
+/* Checkbox - rose accent */
+input[type="checkbox"] {
+    accent-color: #F694C1;
+}
+
+/* Pastel block backgrounds (used with reduced opacity in blocks) */
+.block-bg-yellow {
+    background-color: rgba(237, 231, 177, 0.5) !important;
+}
+
+.block-bg-green {
+    background-color: rgba(211, 248, 226, 0.5) !important;
+}
+
+.block-bg-blue {
+    background-color: rgba(169, 222, 249, 0.5) !important;
+}
+
+.block-bg-purple {
+    background-color: rgba(228, 193, 249, 0.5) !important;
+}
+
+.block-bg-red {
+    background-color: rgba(246, 148, 193, 0.5) !important;
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+a,
+input,
+textarea {
+    transition: all 0.2s ease-in-out;
 }
