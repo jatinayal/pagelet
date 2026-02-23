@@ -34,7 +34,8 @@ export function Sidebar({
     onLogout,
     creating = false,
     isCollapsed = false,
-    onToggle
+    onToggle,
+    onNavigate
 }) {
     const router = useRouter();
     const pathname = usePathname();
@@ -138,7 +139,13 @@ export function Sidebar({
                                 return (
                                     <div
                                         key={page._id}
-                                        onClick={() => router.push(`/page/${page._id}`)}
+                                        onClick={() => {
+                                            if (onNavigate) {
+                                                onNavigate(`/page/${page._id}`);
+                                            } else {
+                                                router.push(`/page/${page._id}`);
+                                            }
+                                        }}
                                         className="group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer
                                                  transition-all text-sm"
                                         style={{

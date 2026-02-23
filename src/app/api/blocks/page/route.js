@@ -15,6 +15,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
 import Page from '@/models/Page';
 import Block from '@/models/Block';
@@ -69,7 +70,7 @@ async function createPageBlock(request, { user }) {
 
         // Calculate block order
         let order;
-        if (afterBlockId) {
+        if (afterBlockId && mongoose.Types.ObjectId.isValid(afterBlockId)) {
             const afterBlock = await Block.findById(afterBlockId);
             order = afterBlock ? afterBlock.order + 1 : await Block.getNextOrder(parentPageId);
         } else {

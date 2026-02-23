@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useBlocks } from '@/hooks/useBlocks';
 import { useSidebar } from '@/hooks/useSidebar';
 import { BlockRenderer } from '@/components/blocks';
-import { EditorSkeleton, Sidebar, ChatWidget, DeleteConfirmMenu } from '@/components/ui';
+import { EditorSkeleton, Sidebar, ChatWidget, DeleteConfirmMenu, UnsavedGuardModal } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import * as api from '@/lib/apiClient';
 import { handleAIResult } from '@/lib/aiActionHandler';
@@ -301,24 +301,62 @@ export default function PageEditor({ params }) {
 
     // Navigate to a child page (from page block click)
     const handlePageBlockClick = (childPageId) => {
-        router.push(`/page/${childPageId}`);
+        withUnsavedGuard(() => {
+            router.push(`/page/${childPageId}`);
+        });
     };
 
     // Navigate back to parent page
     const handleBackClick = () => {
-        if (breadcrumb.length > 0) {
-            const parent = breadcrumb[breadcrumb.length - 1];
-            router.push(`/page/${parent._id}`);
+        withUnsavedGuard(() => {
+            if (breadcrumb.length > 0) {
+                const parent = breadcrumb[breadcrumb.length - 1];
+                router.push(`/page/${parent._id}`);
+            } else {
+                router.push('/dashboard');
+            }
+        });
+    };
+
+    // Unsaved Guard Modal State
+    const [showUnsavedGuard, setShowUnsavedGuard] = useState(false);
+    const [pendingAction, setPendingAction] = useState(null);
+
+    /**
+     * Helper to guard navigation/creation actions if page is dirty
+     */
+    const withUnsavedGuard = (actionFn) => {
+        if (isDirty) {
+            setPendingAction(() => actionFn);
+            setShowUnsavedGuard(true);
         } else {
-            router.push('/dashboard');
+            actionFn();
         }
     };
 
+    const handleGuardDiscardAndContinue = () => {
+        // Technically, by navigating away, we discard block state automatically 
+        // because the component unmounts. However, to be safe and clean:
+        refreshBlocks(); // Resets local blocks to DB state, clearing isDirty
+        setShowUnsavedGuard(false);
+        if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+        }
+    };
+
+    const handleGuardCancel = () => {
+        setShowUnsavedGuard(false);
+        setPendingAction(null);
+    };
+
     // Sidebar actions
-    const handleCreatePage = async () => {
-        const { page } = await api.createPage('Untitled');
-        setPages((prev) => [page, ...prev]);
-        router.push(`/page/${page._id}`);
+    const handleCreatePage = () => {
+        withUnsavedGuard(async () => {
+            const { page } = await api.createPage('Untitled');
+            setPages((prev) => [page, ...prev]);
+            router.push(`/page/${page._id}`);
+        });
     };
 
     const handleDeletePage = async (deletePageId) => {
@@ -353,26 +391,19 @@ export default function PageEditor({ params }) {
     };
 
     // Create a nested page block
-    const handleAddPageBlock = async () => {
-        try {
-            let currentBlocks = blocks;
+    const handleAddPageBlock = () => {
+        withUnsavedGuard(async () => {
+            try {
+                // At this point, if it was dirty, it has already been saved or discarded
+                // So `blocks` reflects exactly what is on the server
+                const lastBlock = blocks[blocks.length - 1];
 
-            // If we have unsaved changes (ghost blocks with temp IDs), save first
-            // This ensures we have real IDs for the 'afterBlockId' parameter
-            if (isDirty) {
-                const savedBlocks = await saveAllBlocks();
-                if (!savedBlocks) return; // Save failed
-                currentBlocks = savedBlocks;
+                const { block } = await api.createPageBlock(pageId, lastBlock?._id, 'Untitled');
+                refreshBlocks(); // Reload blocks to show new page block
+            } catch (err) {
+                console.error('Failed to create page block:', err);
             }
-
-            const lastBlock = currentBlocks[currentBlocks.length - 1];
-            // If lastBlock was a ghost block, it now has a real _id from the save
-
-            const { block } = await api.createPageBlock(pageId, lastBlock?._id, 'Untitled');
-            refreshBlocks(); // Reload blocks to show new page block
-        } catch (err) {
-            console.error('Failed to create page block:', err);
-        }
+        });
     };
 
     /**
@@ -456,6 +487,7 @@ export default function PageEditor({ params }) {
                 loading={pagesLoading}
                 onCreatePage={handleCreatePage}
                 onDeletePage={handleDeletePage}
+                onNavigate={(url) => withUnsavedGuard(() => router.push(url))}
                 onLogout={logout}
                 isCollapsed={isCollapsed}
                 onToggle={toggleSidebar}
@@ -511,7 +543,7 @@ export default function PageEditor({ params }) {
                         </div>
 
                         {/* Right side: Save & Delete Actions */}
-                        <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md border border-white/40 p-1 rounded-xl shadow-sm">
+                        <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md border border-white/40 p-1 rounded-xl shadow-sm relative">
 
                             {/* Share Button & Popover */}
                             <div className="relative">
@@ -566,6 +598,12 @@ export default function PageEditor({ params }) {
                                     </div>
                                 )}
                             </div>
+
+                            <UnsavedGuardModal
+                                isOpen={showUnsavedGuard}
+                                onDiscardAndContinue={handleGuardDiscardAndContinue}
+                                onCancel={handleGuardCancel}
+                            />
 
                             <div className="w-px h-6 bg-gray-300/50 mx-1"></div>
 
