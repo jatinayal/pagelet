@@ -15,6 +15,7 @@ import connectDB from '@/lib/db';
 import Page from '@/models/Page';
 import Block from '@/models/Block';
 import { withAuth } from '@/lib/withAuth';
+import { getPaginatedBlocks } from '@/services/blockService';
 
 /**
  * Helper to validate ObjectId format.
@@ -63,98 +64,13 @@ async function getPage(request, { user, params }) {
         const limitParam = url.searchParams.get('limit');
         const cursorParam = url.searchParams.get('cursor');
 
-        // Default to 10 per prompt, allow 'all' if needed for edge cases or full fetches
-        const limit = limitParam === 'all' ? 0 : (parseInt(limitParam) || 10);
-
-        let query = { pageId };
-        if (cursorParam && !isNaN(Number(cursorParam))) {
-            query.order = { $gt: Number(cursorParam) };
-        }
-
-        // Fetch blocks sorted by order for correct rendering
-        let dbQuery = Block.find(query).sort({ order: 1 });
-        if (limit > 0) {
-            dbQuery = dbQuery.limit(limit + 1); // Fetch one extra to check hasMore
-        }
-
-        const fetchedBlocks = await dbQuery.lean();
-
-        let hasMore = false;
-        let blocks = fetchedBlocks;
-        if (limit > 0 && fetchedBlocks.length > limit) {
-            hasMore = true;
-            blocks = fetchedBlocks.slice(0, limit);
-        }
-
-        const nextCursor = blocks.length > 0 ? blocks[blocks.length - 1].order : null;
-
-        // DEFENSIVE CLEANUP: Remove orphan page blocks
-        // If a page block references a deleted page, remove it
-        const pageBlockIds = blocks
-            .filter((b) => b.type === 'page' && b.content?.pageId)
-            .map((b) => b.content.pageId);
-
-        if (pageBlockIds.length > 0) {
-            // Check which referenced pages actually exist
-            const existingPages = await Page.find({
-                _id: { $in: pageBlockIds },
-            }).select('_id').lean();
-
-            const existingIds = new Set(existingPages.map((p) => p._id.toString()));
-
-            // Find orphan blocks (reference non-existent pages)
-            const orphanBlocks = blocks.filter(
-                (b) => b.type === 'page' &&
-                    b.content?.pageId &&
-                    !existingIds.has(b.content.pageId.toString())
-            );
-
-            // Delete orphan blocks from database
-            if (orphanBlocks.length > 0) {
-                await Block.deleteMany({
-                    _id: { $in: orphanBlocks.map((b) => b._id) },
-                });
-            }
-
-            // Filter them out of response
-            // Result blocks after cleanup
-            let finalBlocks = pageBlockIds.length > 0 ? (blocks.filter(
-                (b) => b.type !== 'page' ||
-                    !b.content?.pageId ||
-                    existingIds.has(b.content.pageId.toString())
-            )) : blocks;
-
-            // ENRICHMENT: Inject titles for page blocks
-            // This mirrors the public API logic to ensure titles are available
-            const pageBlocks = finalBlocks.filter(b => b.type === 'page' && b.content?.pageId);
-
-            if (pageBlocks.length > 0) {
-                const pageIdsToFetch = pageBlocks.map(b => b.content.pageId);
-                // Fetch titles
-                const pagesInfo = await Page.find({ _id: { $in: pageIdsToFetch } }, 'title').lean();
-
-                const titleMap = pagesInfo.reduce((acc, p) => {
-                    acc[p._id.toString()] = p.title;
-                    return acc;
-                }, {});
-
-                // Inject titles
-                finalBlocks = finalBlocks.map(block => {
-                    if (block.type === 'page' && block.content?.pageId) {
-                        return {
-                            ...block,
-                            content: {
-                                ...block.content,
-                                title: titleMap[block.content.pageId.toString()] || 'Untitled'
-                            }
-                        };
-                    }
-                    return block;
-                });
-            }
-
-            return NextResponse.json({ page, blocks: finalBlocks, nextCursor, hasMore });
-        }
+        // Use shared pagination service
+        const { blocks, nextCursor, hasMore } = await getPaginatedBlocks(
+            pageId,
+            limitParam,
+            cursorParam,
+            false // isPublicView = false
+        );
 
         return NextResponse.json({ page, blocks, nextCursor, hasMore });
     } catch (error) {

@@ -25,29 +25,24 @@ export default function Footer() {
                     <div>
                         <h4 className="font-semibold text-gray-900 mb-4">Product</h4>
                         <ul className="space-y-3 text-sm text-gray-600">
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Features</Link></li>
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Pricing</Link></li>
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Download</Link></li>
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Changelog</Link></li>
+                            <li><Link href="/features" className="hover:text-purple-600 transition-colors">Features</Link></li>
                         </ul>
                     </div>
 
                     <div>
                         <h4 className="font-semibold text-gray-900 mb-4">Resources</h4>
                         <ul className="space-y-3 text-sm text-gray-600">
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Community</Link></li>
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Help Center</Link></li>
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Templates</Link></li>
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Blog</Link></li>
+                            <li><Link href="/help" className="hover:text-purple-600 transition-colors">Help Center</Link></li>
+                            <li><Link href="/contact" className="hover:text-purple-600 transition-colors">Contact Us</Link></li>
                         </ul>
                     </div>
 
                     <div>
                         <h4 className="font-semibold text-gray-900 mb-4">Legal</h4>
                         <ul className="space-y-3 text-sm text-gray-600">
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Privacy Policy</Link></li>
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Terms of Service</Link></li>
-                            <li><Link href="#" className="hover:text-purple-600 transition-colors">Cookie Policy</Link></li>
+                            <li><Link href="/privacy" className="hover:text-purple-600 transition-colors">Privacy Policy</Link></li>
+                            <li><Link href="/terms" className="hover:text-purple-600 transition-colors">Terms of Service</Link></li>
+                            <li><Link href="/cookies" className="hover:text-purple-600 transition-colors">Cookie Policy</Link></li>
                         </ul>
                     </div>
                 </div>
@@ -56,16 +51,13 @@ export default function Footer() {
                 <div className="border-t border-gray-200 py-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
                     <p>© {new Date().getFullYear()} Pagelet Inc. All rights reserved.</p>
                     <div className="flex items-center gap-6">
-                        <a href="#" className="text-gray-400 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full">
+                        <a href="https://github.com/jatinayal/pagelet" className="text-gray-400 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full">
                             <Github className="w-5 h-5" />
                         </a>
-                        <a href="#" className="text-gray-400 hover:text-[#0077b5] transition-colors p-2 hover:bg-blue-50 rounded-full">
+                        <a href="https://linkedin.com/in/jatin-nayal-300438353" className="text-gray-400 hover:text-[#0077b5] transition-colors p-2 hover:bg-blue-50 rounded-full">
                             <Linkedin className="w-5 h-5" />
                         </a>
-                        <a href="#" className="text-gray-400 hover:text-[#1DA1F2] transition-colors p-2 hover:bg-blue-50 rounded-full">
-                            <Twitter className="w-5 h-5" />
-                        </a>
-                        <a href="#" className="text-gray-400 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full">
+                        <a href="mailto:jatinsingh89234@gmail.com" className="text-gray-400 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full">
                             <Mail className="w-5 h-5" />
                         </a>
                     </div>

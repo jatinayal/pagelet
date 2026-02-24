@@ -1,66 +1,108 @@
-import { Blocks, Layers, MonitorOff, Save, GripVertical, Sparkles } from 'lucide-react';
+'use client';
+
+import { Blocks, Layers, MonitorOff, Save, GripVertical, Bot, Globe, DownloadCloud, Search } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const FEATURE_LIST = [
     {
         icon: Blocks,
-        title: 'Block-based editing',
-        description: 'Build your ideas block by block. Text, images, code—everything is a block.',
-    },
-    {
-        icon: Layers,
-        title: 'Nested pages',
-        description: 'No more folders. Organize your thoughts hierarchically with infinite nesting.',
-    },
-    {
-        icon: MonitorOff,
-        title: 'Distraction-free',
-        description: 'A clean interface that fades away, letting you focus entirely on your writing.',
-    },
-    {
-        icon: Save,
-        title: 'Auto-save',
-        description: 'Never lose a thought. Your work is saved instantly as you type.',
+        title: 'Block-Based Editor',
+        description: 'Build your ecosystem sequentially. Text, lists, nested pages, and to-do items operate independently.',
     },
     {
         icon: GripVertical,
-        title: 'Drag & Drop',
-        description: 'Reorganize easily. Move blocks around to structure your thoughts naturally.',
+        title: 'Drag & Drop Fluidity',
+        description: 'Grabbing layout handles instantly organizes complex document matrices without rendering delays.',
     },
     {
-        icon: Sparkles,
-        title: 'AI Assistance',
-        description: 'Coming soon. Writing help, summarization, and brainstorming partners.',
+        icon: Save,
+        title: 'Manual Save Control',
+        description: 'Complete data integrity via intentional saves. Reduces unwarranted database pings dramatically.',
     },
+    {
+        icon: Globe,
+        title: 'Public Page Sharing',
+        description: 'Immediately transpose secure private clusters into accessible read-only URLs with a single click.',
+    },
+    {
+        icon: DownloadCloud,
+        title: 'Block Framework Imports',
+        description: 'Legitimately clone up to 50 nested components from public environments right into your private workspace.',
+    },
+    {
+        icon: Bot,
+        title: 'Floating AI Assistant',
+        description: 'Context-aware intelligence generating content arrays intelligently by parsing your visible DOM.',
+    },
+    {
+        icon: Search,
+        title: 'Lazy Load Pagination',
+        description: 'Maintain 60 FPS while scrolling infinitely. Database queries segment locally for massive document stability.',
+    },
+    {
+        icon: Layers,
+        title: 'Infinite Nesting',
+        description: 'Organize logic recursively. Sub-page limits literally do not exist underneath the parent structures.',
+    }
 ];
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1,
+            delayChildren: 0.1,
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+};
 
 export default function Features() {
     return (
         <section className="py-24 px-6 relative overflow-hidden">
             <div className="container mx-auto max-w-6xl">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                        Everything you need to <br className="hidden md:block" /> organize your life.
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center mb-16"
+                >
+                    <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+                        A workspace architected <br className="hidden md:block" /> for modern workflows.
                     </h2>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        A simple yet powerful tool for your thoughts, plans, and projects.
+                        Highly engineered algorithms underpinning a calming aesthetic.
                     </p>
-                </div>
+                </motion.div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                >
                     {FEATURE_LIST.map((feature, idx) => (
-                        <div
+                        <motion.div
                             key={idx}
-                            className="group p-6 rounded-2xl bg-white/40 backdrop-blur-md border border-white/30 
-                         shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+                            variants={itemVariants}
+                            className="group p-6 rounded-3xl bg-white/60 backdrop-blur-xl border border-white/40 
+                         shadow-sm hover:shadow-xl hover:border-purple-200/50 transition-all duration-300 hover:-translate-y-2 flex flex-col"
                         >
-                            <div className="w-10 h-10 rounded-lg bg-white/60 flex items-center justify-center mb-4 text-gray-700 group-hover:text-purple-600 group-hover:bg-purple-50 transition-colors">
-                                <feature.icon className="w-5 h-5" />
+                            <div className="w-12 h-12 rounded-xl bg-gray-50/80 flex items-center justify-center mb-5 text-gray-700 group-hover:text-purple-600 group-hover:scale-110 transition-transform">
+                                <feature.icon className="w-6 h-6" />
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                            <p className="text-sm text-gray-600 leading-relaxed">{feature.description}</p>
-                        </div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-3">{feature.title}</h3>
+                            <p className="text-sm text-gray-600 leading-relaxed font-normal">{feature.description}</p>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
         </section>
     );

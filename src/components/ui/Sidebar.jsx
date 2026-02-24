@@ -66,7 +66,7 @@ export function Sidebar({
                     <Link href="/" className="text-lg font-semibold flex items-center gap-2"
                         style={{ color: 'var(--color-text-primary)' }}>
                         <img
-                            src="/logo.png"
+                            src="/logo.webp"
                             alt="Logo"
                             className="w-8 h-8 rounded-lg object-contain mt-1"
                         />
@@ -74,7 +74,7 @@ export function Sidebar({
                     </Link>
                     <button
                         onClick={onToggle}
-                        className="p-1.5 rounded-lg transition-colors"
+                        className="p-1.5 rounded-lg transition-colors cursor-pointer"
                         style={{ color: 'var(--color-text-muted)' }}
                         onMouseEnter={(e) => e.target.style.background = 'rgba(15, 23, 42, 0.05)'}
                         onMouseLeave={(e) => e.target.style.background = 'transparent'}
@@ -219,7 +219,7 @@ export function Sidebar({
             {/* Expand Button - visible when collapsed */}
             <button
                 onClick={onToggle}
-                className={`fixed top-4 left-4 z-40 p-2.5 rounded-xl transition-all duration-300 ease-in-out
+                className={`fixed top-4 cursor-pointer left-4 z-40 p-2.5 rounded-xl transition-all duration-300 ease-in-out
                           ${isCollapsed ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                 style={{
                     background: 'rgba(255, 255, 255, 0.7)',

@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useBlocks } from '@/hooks/useBlocks';
 import { useSidebar } from '@/hooks/useSidebar';
 import { BlockRenderer } from '@/components/blocks';
-import { EditorSkeleton, Sidebar, ChatWidget, DeleteConfirmMenu, UnsavedGuardModal } from '@/components/ui';
+import { EditorSkeleton, Sidebar, ChatWidget, DeleteConfirmMenu, UnsavedGuardModal, ImportModal } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import * as api from '@/lib/apiClient';
 import { handleAIResult } from '@/lib/aiActionHandler';
@@ -74,7 +74,11 @@ export default function PageEditor({ params }) {
         loadMoreBlocks,
         saveAllBlocks,
         refreshBlocks,
+        appendImportedBlocks,
     } = useBlocks(pageId);
+
+    // Import Modal State
+    const [showImportModal, setShowImportModal] = useState(false);
 
     // Observer target for infinite scrolling
     const observerTarget = useRef(null);
@@ -476,6 +480,23 @@ export default function PageEditor({ params }) {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const handleImportBlocks = async (sourceId) => {
+        const response = await api.importBlocksFromPublicPage(pageId, sourceId);
+
+        if (response.success && response.blocks) {
+            appendImportedBlocks(response.blocks);
+
+            // Check if backend updated title
+            if (response.updatedTitle) {
+                setPageTitle(response.updatedTitle);
+                setTitle(pageId, response.updatedTitle);
+                setPages((prev) =>
+                    prev.map((p) => p._id === pageId ? { ...p, title: response.updatedTitle } : p)
+                );
+            }
+        }
+    };
+
     // Check if current page is a child page
     const isChildPage = currentPage?.parentPageId != null;
 
@@ -497,7 +518,7 @@ export default function PageEditor({ params }) {
             <div className={`min-h-screen flex flex-col transition-[margin] duration-300 ease-in-out
                           ${isCollapsed ? 'ml-0' : 'ml-[260px]'}`}>
                 {/* Editor Header - glass panel */}
-                <header className="sticky top-0 z-10"
+                <header className="sticky top-0 z-50"
                     style={{
                         background: 'rgba(255, 255, 255, 0.6)',
                         backdropFilter: 'blur(20px)',
@@ -511,7 +532,7 @@ export default function PageEditor({ params }) {
                                 <>
                                     <button
                                         onClick={handleBackClick}
-                                        className="flex items-center gap-1 transition-colors"
+                                        className="flex items-center cursor-pointer gap-1 transition-colors"
                                         style={{ color: 'var(--color-text-muted)' }}
                                         onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
                                         onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
@@ -527,7 +548,7 @@ export default function PageEditor({ params }) {
                                                 <span key={crumb._id} className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => router.push(`/page/${crumb._id}`)}
-                                                        className="text-gray-500 hover:text-gray-300 transition-colors truncate max-w-[100px]"
+                                                        className="text-gray-500 hover:text-gray-700 cursor-pointer transition-colors truncate max-w-[100px]"
                                                     >
                                                         {crumb.title || 'Untitled'}
                                                     </button>
@@ -544,6 +565,26 @@ export default function PageEditor({ params }) {
 
                         {/* Right side: Save & Delete Actions */}
                         <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md border border-white/40 p-1 rounded-xl shadow-sm relative">
+
+                            {/* Import Blocks Button & Modal */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowImportModal(true)}
+                                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all text-sm text-gray-500 hover:bg-gray-100/50 hover:text-gray-700"
+                                    title="Import blocks from a public page"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M20 15.006V10.66c0-.818 0-1.227-.152-1.595s-.441-.657-1.02-1.235l-4.736-4.739c-.499-.499-.748-.748-1.058-.896a2 2 0 0 0-.197-.082C12.514 2 12.161 2 11.456 2c-3.245 0-4.868 0-5.967.886a4 4 0 0 0-.603.604C4 4.59 4 6.213 4 9.46v4.545c0 3.773 0 5.66 1.172 6.832C6.115 21.78 7.52 21.964 10 22m3-19.5V3c0 2.83 0 4.245.879 5.124c.878.879 2.293.879 5.121.879h.5" /><path d="M15 22c-.607-.59-3-2.16-3-3s2.393-2.41 3-3m-2 3h7" /></g></svg>
+                                </button>
+
+                                <ImportModal
+                                    isOpen={showImportModal}
+                                    onClose={() => setShowImportModal(false)}
+                                    onImport={handleImportBlocks}
+                                    currentPageId={pageId}
+                                />
+                            </div>
+
+                            <div className="w-px h-6 bg-gray-300/50 mx-1"></div>
 
                             {/* Share Button & Popover */}
                             <div className="relative">
@@ -683,11 +724,25 @@ export default function PageEditor({ params }) {
                             }}
                         />
 
+                        {/* Global invisible backdrop to close block menus and prevent underlying interactions */}
+                        {(showTypeMenu || showColorMenu) && (
+                            <div
+                                className="fixed inset-0 z-40 bg-transparent"
+                                onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setShowTypeMenu(null);
+                                    setShowColorMenu(null);
+                                }}
+                            />
+                        )}
+
                         {/* Blocks */}
                         <div className="space-y-1">
                             {blocks.map((block, blockIndex) => {
                                 const isFocused = block._id === focusedBlockId;
                                 const isPageBlock = block.type === 'page';
+                                const isMenuOpenForThisBlock = showTypeMenu === block._id || showColorMenu === block._id;
 
                                 /**
                                  * Background styling for glass card effect.
@@ -708,7 +763,8 @@ export default function PageEditor({ params }) {
                                         key={block._id}
                                         className={`group relative rounded-xl transition-all 
                                             ${block.backgroundColor ? 'px-4 py-2' : ''}
-                                            ${draggedBlockId === block._id ? 'opacity-50 scale-[0.98]' : ''}`}
+                                            ${draggedBlockId === block._id ? 'opacity-50 scale-[0.98]' : ''}
+                                            ${isMenuOpenForThisBlock ? 'z-50 relative' : 'z-10 relative'}`}
                                         style={bgStyle}
                                         onFocus={() => setFocusedBlockId(block._id)}
                                         onDragOver={(e) => {
@@ -740,8 +796,8 @@ export default function PageEditor({ params }) {
                                         )}
                                         {/* Block Controls - visible on hover (not for page blocks) */}
                                         {!isPageBlock && (
-                                            <div className="absolute -left-20 top-1 opacity-0 group-hover:opacity-100 
-                                      transition-opacity flex items-center gap-0.5">
+                                            <div className={`absolute -left-20 top-1 transition-opacity flex items-center gap-0.5
+                                                ${isMenuOpenForThisBlock ? 'opacity-100 z-50' : 'opacity-0 group-hover:opacity-100 z-20'}`}>
                                                 {/* Drag Handle - the ONLY draggable element */}
                                                 <div
                                                     draggable
@@ -773,6 +829,7 @@ export default function PageEditor({ params }) {
                                                 {/* Color Menu - glass panel */}
                                                 {showColorMenu === block._id && (
                                                     <div className="absolute left-0 top-7 z-20 p-2 flex flex-col gap-1.5 rounded-xl"
+                                                        onClick={(e) => e.stopPropagation()}
                                                         style={{
                                                             background: 'rgba(255, 255, 255, 0.9)',
                                                             backdropFilter: 'blur(12px)',
@@ -783,11 +840,12 @@ export default function PageEditor({ params }) {
                                                         {colorPalette.map(({ hex, label }) => (
                                                             <button
                                                                 key={label}
-                                                                onClick={() => {
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
                                                                     updateBlockMeta(block._id, { backgroundColor: hex });
                                                                     setShowColorMenu(null);
                                                                 }}
-                                                                className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110
+                                                                className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 cursor-pointer
                                                                     ${hex === block.backgroundColor ? 'border-gray-500' : 'border-transparent'}
                                                                     ${!hex ? 'border-dashed' : ''}`}
                                                                 style={hex ? { backgroundColor: hex } : { background: 'rgba(15, 23, 42, 0.1)' }}
@@ -808,15 +866,19 @@ export default function PageEditor({ params }) {
 
                                                 {/* Type Menu Dropdown */}
                                                 {showTypeMenu === block._id && (
-                                                    <div className="absolute left-6 top-7 z-20 bg-gray-800/80 backdrop-blur-3xl
-                                          border border-white/10 rounded-xl shadow-xl py-2 min-w-[160px]">
+                                                    <div className="absolute left-6 top-7 z-20 bg-white/95 backdrop-blur-2xl
+                                          border border-white/60 rounded-2xl shadow-xl py-2 min-w-[160px]"
+                                                        onClick={(e) => e.stopPropagation()}>
                                                         {blockTypes.map(({ type, label, Icon }) => (
                                                             <button
                                                                 key={type}
-                                                                onClick={() => handleTypeChange(block._id, type)}
-                                                                className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3
-                                            hover:bg-white/5 transition-colors
-                                            ${block.type === type ? 'text-indigo-400' : 'text-gray-300'}`}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleTypeChange(block._id, type);
+                                                                }}
+                                                                className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 cursor-pointer
+                                            hover:bg-gray-100 transition-colors
+                                            ${block.type === type ? 'text-indigo-500' : 'text-gray-500'}`}
                                                             >
                                                                 <Icon className="w-4 h-4 opacity-60" />
                                                                 {label}

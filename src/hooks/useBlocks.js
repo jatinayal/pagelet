@@ -46,7 +46,7 @@ export function useBlocks(pageId) {
         try {
             setLoading(true);
             setError(null);
-            const data = await api.getPage(pageId, 10, null);
+            const data = await api.getPage(pageId, 20, null);
             setBlocks(data.blocks || []);
             setHasMore(data.hasMore || false);
             setNextCursor(data.nextCursor || null);
@@ -72,7 +72,7 @@ export function useBlocks(pageId) {
 
         try {
             setIsFetchingNext(true);
-            const data = await api.getPage(pageId, 10, nextCursor);
+            const data = await api.getPage(pageId, 20, nextCursor);
 
             setBlocks((prev) => {
                 const existingIds = new Set(prev.map(b => b._id));
@@ -262,6 +262,14 @@ export function useBlocks(pageId) {
         }
     }, [pageId, blocks, isDirty, hasMore, fetchRemainingBlocks]);
 
+    /**
+     * Append blocks directly (for features like import).
+     */
+    const appendImportedBlocks = useCallback((newBlocks) => {
+        setBlocks((prev) => [...prev, ...newBlocks]);
+        // Do NOT mark as dirty automatically if they are already saved to the backend
+    }, []);
+
     return {
         blocks,
         loading,
@@ -279,6 +287,7 @@ export function useBlocks(pageId) {
         removeBlock,
         addFirstBlock,
         saveAllBlocks,
+        appendImportedBlocks,
         refreshBlocks: loadBlocks, // Used by external components to force reload
         reload: loadBlocks
     };

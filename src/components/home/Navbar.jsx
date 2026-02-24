@@ -10,7 +10,7 @@ export default function Navbar() {
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2 group">
                     <div
-                        className="w-7 h-7 bg-[url('/logo.png')] bg-contain bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-110"
+                        className="w-7 h-7 bg-[url('/logo.webp')] bg-contain bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-110"
                         aria-label="Pagelet logo"
                     />
                     <span className="text-base font-semibold text-gray-800 tracking-tight">

@@ -68,7 +68,7 @@ export async function getPages() {
     return fetchAPI('/pages');
 }
 
-export async function getPage(pageId, limit = 10, cursor = null) {
+export async function getPage(pageId, limit = 20, cursor = null) {
     const params = new URLSearchParams();
     if (limit) params.append('limit', limit);
     if (cursor !== null) params.append('cursor', cursor);
@@ -108,8 +108,15 @@ export async function updatePageVisibility(pageId, isPublic) {
 // Public Access API
 // ==================
 
-export async function getPublicPage(pageId) {
-    return fetchAPI(`/public/pages/${pageId}`);
+export async function getPublicPage(pageId, limit = 20, cursor = null) {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit);
+    if (cursor !== null) params.append('cursor', cursor);
+
+    const queryString = params.toString();
+    const endpoint = `/public/pages/${pageId}${queryString ? `?${queryString}` : ''}`;
+
+    return fetchAPI(endpoint);
 }
 
 // ==================
@@ -161,5 +168,15 @@ export async function savePageContent(pageId, blocks) {
     return fetchAPI(`/pages/${pageId}/blocks`, {
         method: 'PUT',
         body: JSON.stringify({ blocks }),
+    });
+}
+
+/**
+ * Import blocks from a public page.
+ */
+export async function importBlocksFromPublicPage(targetPageId, sourcePageId) {
+    return fetchAPI(`/pages/${targetPageId}/import`, {
+        method: 'POST',
+        body: JSON.stringify({ sourcePageId }),
     });
 }

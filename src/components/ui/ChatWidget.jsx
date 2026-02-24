@@ -257,7 +257,7 @@ export function ChatWidget({ pageContext = {}, onExecuteActions }) {
                               transition-all duration-300 ease-out cursor-pointer
                               ${isOpen ? 'scale-95' : 'hover:scale-105'}`}
                     style={{
-                        background: `url('/widget.png') bottom/90% no-repeat`,
+                        background: `url('/widget.webp') bottom/90% no-repeat`,
                         backgroundColor: 'white', // fallback
                         boxShadow: '0 8px 32px rgba(228, 193, 249, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.3)',
                         backdropFilter: 'blur(8px)',
@@ -290,7 +290,7 @@ export function ChatWidget({ pageContext = {}, onExecuteActions }) {
                 <div className="flex items-center justify-between px-5 py-4"
                     style={{ borderBottom: '1px solid rgba(15, 23, 42, 0.08)' }}>
                     <div className="flex items-center gap-3">
-                        <img src="/frog3.png" alt="AI" className="w-8 h-8 object-contain scale-150" />
+                        <img src="/frog3.webp" alt="AI" className="w-8 h-8 object-contain scale-150" />
                         <div>
                             <h3 className="text-sm font-semibold text-gray-800">Pebble AI</h3>
                             <p className="text-xs text-gray-500">Always here to help</p>

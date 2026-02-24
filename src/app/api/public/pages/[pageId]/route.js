@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Page from '@/models/Page';
 import Block from '@/models/Block';
+import { getPaginatedBlocks } from '@/services/blockService';
 
 export async function GET(request, { params }) {
     try {
@@ -36,36 +37,18 @@ export async function GET(request, { params }) {
             );
         }
 
-        // Fetch blocks for the page
-        let blocks = await Block.find({ pageId })
-            .sort({ order: 1 })
-            .lean();
+        const url = new URL(request.url);
+        const limitParam = url.searchParams.get('limit');
+        const cursorParam = url.searchParams.get('cursor');
 
-        // Enrich 'page' blocks with actual titles
-        const pageBlocks = blocks.filter(b => b.type === 'page' && b.content?.pageId);
-        if (pageBlocks.length > 0) {
-            const pageIds = pageBlocks.map(b => b.content.pageId);
-            const pagesInfo = await Page.find({ _id: { $in: pageIds } }, 'title').lean();
-
-            const titleMap = pagesInfo.reduce((acc, p) => {
-                acc[p._id.toString()] = p.title;
-                return acc;
-            }, {});
-
-            // Inject title into block content
-            blocks = blocks.map(block => {
-                if (block.type === 'page' && block.content?.pageId) {
-                    return {
-                        ...block,
-                        content: {
-                            ...block.content,
-                            title: titleMap[block.content.pageId.toString()] || 'Untitled'
-                        }
-                    };
-                }
-                return block;
-            });
-        }
+        // Fetch paginated blocks using shared service
+        // isPublicView = true ensures we don't delete orphans and filters non-public pages
+        const { blocks, nextCursor, hasMore } = await getPaginatedBlocks(
+            pageId,
+            limitParam,
+            cursorParam,
+            true
+        );
 
         // Security: Remove internal/sensitive fields
         const sanitizedPage = {
@@ -79,7 +62,9 @@ export async function GET(request, { params }) {
 
         return NextResponse.json({
             page: sanitizedPage,
-            blocks
+            blocks,
+            nextCursor,
+            hasMore
         });
 
     } catch (error) {

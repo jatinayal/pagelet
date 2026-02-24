@@ -1,0 +1,56 @@
+
+> notionclone@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 19.4s
+  Running TypeScript ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/23) ...
+  Generating static pages using 3 workers (5/23) 
+  Generating static pages using 3 workers (11/23) 
+  Generating static pages using 3 workers (17/23) 
+✓ Generating static pages using 3 workers (23/23) in 1161.9ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/ai/chat
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/me
+├ ƒ /api/auth/register
+├ ƒ /api/blocks
+├ ƒ /api/blocks/[blockId]
+├ ƒ /api/blocks/page
+├ ƒ /api/health
+├ ƒ /api/pages
+├ ƒ /api/pages/[pageId]
+├ ƒ /api/pages/[pageId]/blocks
+├ ƒ /api/pages/[pageId]/import
+├ ƒ /api/pages/[pageId]/public
+├ ƒ /api/public/pages/[pageId]
+├ ƒ /api/upload
+├ ○ /contact
+├ ○ /cookies
+├ ○ /dashboard
+├ ○ /features
+├ ○ /help
+├ ○ /login
+├ ƒ /page/[pageId]
+├ ○ /privacy
+├ ƒ /public/[pageId]
+├ ○ /signup
+└ ○ /terms
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -130,6 +130,23 @@ export default function ImageBlock({ block, onChange, readOnly }) {
         );
     }
 
+    // Render: Empty Read-Only State
+    if (readOnly) {
+        return (
+            <div className="relative group my-2">
+                <div className="flex flex-col items-center justify-center p-8 border border-dashed border-gray-200 rounded-xl bg-gray-50/30 text-gray-400">
+                    <ImageIcon className="w-8 h-8 mb-2 opacity-30" />
+                    <span className="text-sm font-medium">Image not available</span>
+                </div>
+                {caption && (
+                    <div className="w-full text-sm text-gray-500 text-center mt-1.5">
+                        {caption}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     // Render: Upload State
     return (
         <div
@@ -153,7 +170,7 @@ export default function ImageBlock({ block, onChange, readOnly }) {
 
             {/* Mouth Image */}
             <img
-                src={isDragging ? "/imageyes.png" : "/imageno.png"}
+                src={isDragging ? "/imageyes.webp" : "/imageno.webp"}
                 alt="Upload Character"
                 className="w-50 mb-4 transition-all duration-200 select-none pointer-events-none"
             />
