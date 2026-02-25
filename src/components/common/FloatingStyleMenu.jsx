@@ -22,6 +22,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Bold, Italic, Underline, ChevronDown } from 'lucide-react';
 
 const FONTS = [
@@ -77,24 +78,22 @@ export function FloatingStyleMenu({
         const menuHeight = 40;
         const gap = 10;
 
-        // Horizontal Centering
-        let leftPos = rect.left + (rect.width / 2) - (menuWidth / 2);
+        // Horizontal Centering (Relative to Document)
+        const scrollX = typeof window !== 'undefined' ? window.scrollX : 0;
+        const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+
+        let leftPos = rect.left + scrollX + (rect.width / 2) - (menuWidth / 2);
 
         // Horizontal Clamping
         const padding = 16;
-        if (leftPos < padding) {
-            leftPos = padding;
-        } else if (leftPos + menuWidth > window.innerWidth - padding) {
-            leftPos = window.innerWidth - menuWidth - padding;
+        if (leftPos < scrollX + padding) {
+            leftPos = scrollX + padding;
+        } else if (leftPos + menuWidth > scrollX + window.innerWidth - padding) {
+            leftPos = scrollX + window.innerWidth - menuWidth - padding;
         }
 
-        // Vertical Positioning (Default: Above)
-        let topPos = rect.top - menuHeight - gap;
-
-        // Vertical Clamping: If it overflows the top of the viewport, position below
-        if (topPos < padding) {
-            topPos = rect.bottom + gap;
-        }
+        // Vertical Positioning (Always Above, rigidly attached to document)
+        let topPos = rect.top + scrollY - menuHeight - gap;
 
         setPosition({
             top: topPos,
@@ -118,9 +117,8 @@ export function FloatingStyleMenu({
         target.addEventListener('keyup', handleSelectionChange);
         document.addEventListener('selectionchange', handleSelectionChange);
 
-        // Window & Scroll Events (capture phase for all scrolls)
+        // Resize Event (recalculate position if window changes)
         window.addEventListener('resize', handleSelectionChange, { passive: true });
-        window.addEventListener('scroll', handleSelectionChange, { passive: true, capture: true });
 
         return () => {
             target.removeEventListener('select', handleSelectionChange);
@@ -128,7 +126,6 @@ export function FloatingStyleMenu({
             target.removeEventListener('keyup', handleSelectionChange);
             document.removeEventListener('selectionchange', handleSelectionChange);
             window.removeEventListener('resize', handleSelectionChange, { capture: true });
-            window.removeEventListener('scroll', handleSelectionChange, { capture: true });
         };
     }, [targetRef, updateSelection]);
 
@@ -176,13 +173,13 @@ export function FloatingStyleMenu({
         return marks.some(m => m.type === type && m.start <= start && m.end >= end);
     };
 
-    if (!position) return null;
+    if (!position || typeof document === 'undefined') return null;
 
-    return (
+    return createPortal(
         <div
             ref={menuRef}
             data-style-menu="true"
-            className="fixed z-50 flex items-center gap-1 px-2 py-1.5 
+            className="absolute z-49 flex items-center gap-1 px-2 py-1.5 
                        bg-white/95 backdrop-blur-xl border border-white/10 
                        rounded-lg shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-150"
             style={{ top: position.top, left: position.left }}
@@ -251,7 +248,8 @@ export function FloatingStyleMenu({
             >
                 <Underline className="w-4 h-4" />
             </button>
-        </div>
+        </div>,
+        document.body
     );
 }
 
