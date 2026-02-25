@@ -36,7 +36,9 @@ import { applyMark, removeMark, adjustMarksForChange } from '@/utils/textStyles'
 const FONT_VARIABLES = {
     modern: 'var(--font-modern, sans-serif)',
     serif: 'var(--font-serif, serif)',
-    mono: 'var(--font-mono, monospace)'
+    mono: 'var(--font-mono, monospace)',
+    cursive: 'var(--font-cursive, cursive)',
+    royal: 'var(--font-royal, serif)'
 };
 
 export function TextBlock({ block, onChange, onKeyDown, autoFocus, placeholder, className, readOnly }) {

@@ -61,6 +61,8 @@
     --font-modern: var(--font-modern);
     --font-serif: var(--font-serif);
     --font-mono: var(--font-mono);
+    --font-cursive: var(--font-cursive);
+    --font-royal: var(--font-royal);
 }
 
 body {

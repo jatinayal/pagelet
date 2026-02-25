@@ -28,7 +28,9 @@ import { Bold, Italic, Underline, ChevronDown } from 'lucide-react';
 const FONTS = [
     { value: 'modern', label: 'Default', css: 'var(--font-modern, sans-serif)' },
     { value: 'serif', label: 'Serif', css: 'var(--font-serif, serif)' },
-    { value: 'mono', label: 'Mono', css: 'var(--font-mono, monospace)' }
+    { value: 'mono', label: 'Mono', css: 'var(--font-mono, monospace)' },
+    { value: 'cursive', label: 'Cursive', css: 'var(--font-cursive, cursive)' },
+    { value: 'royal', label: 'Royal', css: 'var(--font-royal, serif)' }
 ];
 
 export function FloatingStyleMenu({

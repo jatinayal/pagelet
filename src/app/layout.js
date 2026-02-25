@@ -1,4 +1,4 @@
-import { Poppins, Outfit, Playfair_Display, IBM_Plex_Mono } from "next/font/google";
+import { Poppins, Outfit, Playfair_Display, IBM_Plex_Mono, Dancing_Script, Cinzel } from "next/font/google";
 import { PageTitleProvider } from "@/contexts/PageTitleContext";
 import "./globals.css";
 
@@ -25,6 +25,18 @@ const fontMono = IBM_Plex_Mono({
   weight: ["400", "500", "600", "700"],
 });
 
+const fontCursive = Dancing_Script({
+  variable: "--font-cursive",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const fontRoyal = Cinzel({
+  variable: "--font-royal",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
 export const metadata = {
   title: "Pagelet",
   description: "A calmer place for your ideas.",
@@ -38,7 +50,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} ${fontModern.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}
+        className={`${poppins.variable} ${fontModern.variable} ${fontSerif.variable} ${fontMono.variable} ${fontCursive.variable} ${fontRoyal.variable} antialiased`}
         style={{ fontFamily: 'var(--font-poppins), sans-serif' }}
       >
         <PageTitleProvider>
