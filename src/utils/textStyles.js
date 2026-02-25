@@ -96,16 +96,12 @@ export function removeMark(marks = [], type, start, end) {
 
 /**
  * Adjust mark positions when text changes (insertion/deletion).
- * 
- * @param {Array} marks - Current marks
- * @param {number} changeIndex - Where the change happened
- * @param {number} delta - Length change (positive for insert, negative for delete)
+ * Original function kept for backward compatibility if needed elsewhere.
  */
 export function adjustMarks(marks = [], changeIndex, delta) {
     if (delta === 0) return marks;
 
     return marks.map(mark => {
-        // Change happened before the mark: shift whole mark
         if (changeIndex <= mark.start) {
             return {
                 ...mark,
@@ -113,16 +109,74 @@ export function adjustMarks(marks = [], changeIndex, delta) {
                 end: mark.end + delta
             };
         }
-
-        // Change happened inside the mark: extend/shrink mark
         if (changeIndex < mark.end) {
-            return {
-                ...mark,
-                end: mark.end + delta
-            };
+            return { ...mark, end: mark.end + delta };
         }
-
-        // Change happened after: no effect
         return mark;
-    }).filter(mark => mark.end > mark.start); // Remove collapsed marks
+    }).filter(mark => mark.end > mark.start);
+}
+
+/**
+ * Accurately calculate text diff bounds to preserve marks during paste and selection-replacement.
+ * 
+ * @param {Array} marks - Current marks
+ * @param {string} oldText - Text before the change
+ * @param {string} newText - Text after the change
+ */
+export function adjustMarksForChange(marks = [], oldText = '', newText = '') {
+    if (oldText === newText) return marks;
+
+    // 1. Find the boundaries of the change
+    let start = 0;
+    while (start < oldText.length && start < newText.length && oldText[start] === newText[start]) {
+        start++;
+    }
+
+    let oldEnd = oldText.length;
+    let newEnd = newText.length;
+    while (oldEnd > start && newEnd > start && oldText[oldEnd - 1] === newText[newEnd - 1]) {
+        oldEnd--;
+        newEnd--;
+    }
+
+    const deletedLength = oldEnd - start;
+    const insertedLength = newEnd - start;
+
+    if (deletedLength === 0 && insertedLength === 0) return marks;
+
+    // 2. Helper to map indices after deletion
+    const mapPointAfterDeletion = (p) => {
+        const deleteEnd = start + deletedLength;
+        if (p <= start) return p;
+        if (p >= deleteEnd) return p - deletedLength;
+        return start; // Pointers inside the deleted range collapse to the start of the deletion
+    };
+
+    // 3. Process Deletions
+    let resultingMarks = marks;
+    if (deletedLength > 0) {
+        resultingMarks = resultingMarks.map(mark => ({
+            ...mark,
+            start: mapPointAfterDeletion(mark.start),
+            end: mapPointAfterDeletion(mark.end)
+        })).filter(m => m.end > m.start);
+    }
+
+    // 4. Process Insertions
+    if (insertedLength > 0) {
+        resultingMarks = resultingMarks.map(mark => {
+            // Mark is entirely after the insertion point
+            if (start <= mark.start) {
+                return { ...mark, start: mark.start + insertedLength, end: mark.end + insertedLength };
+            }
+            // Mark encompasses the insertion point
+            else if (start < mark.end) {
+                return { ...mark, end: mark.end + insertedLength };
+            }
+            // Mark is entirely before the insertion point
+            return mark;
+        });
+    }
+
+    return resultingMarks;
 }

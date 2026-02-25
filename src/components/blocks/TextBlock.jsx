@@ -28,19 +28,44 @@
 
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, startTransition } from 'react';
 import { RichText } from '../common/RichText';
 import { FloatingStyleMenu } from '../common/FloatingStyleMenu';
-import { applyMark, removeMark, adjustMarks } from '@/utils/textStyles';
+import { applyMark, removeMark, adjustMarksForChange } from '@/utils/textStyles';
+
+const FONT_VARIABLES = {
+    modern: 'var(--font-modern, sans-serif)',
+    serif: 'var(--font-serif, serif)',
+    mono: 'var(--font-mono, monospace)'
+};
 
 export function TextBlock({ block, onChange, onKeyDown, autoFocus, placeholder, className, readOnly }) {
     const textareaRef = useRef(null);
     const [isEditing, setIsEditing] = useState(autoFocus || false);
     const [localSelection, setLocalSelection] = useState({ start: 0, end: 0 });
 
-    // Derived state
-    const text = block.content?.text || '';
-    const marks = block.content?.marks || [];
+    // Local state for instantaneous typing feedback
+    const [localText, setLocalText] = useState(block.content?.text || '');
+    const [localMarks, setLocalMarks] = useState(block.content?.marks || []);
+    const [localFont, setLocalFont] = useState(block.content?.fontFamily || 'modern');
+
+    // Track parent updates to sync safely without overwriting rapid typing
+    const textRef = useRef(block.content?.text || '');
+    const fontRef = useRef(block.content?.fontFamily || 'modern');
+
+    // Synchronize local state when backend data changes (e.g. initial load, conversions)
+    // ONLY if the incoming text fundamentally differs from local text to prevent cursor jumps mid-typing
+    useEffect(() => {
+        if (block.content?.text !== textRef.current) {
+            setLocalText(block.content?.text || '');
+            setLocalMarks(block.content?.marks || []);
+            textRef.current = block.content?.text || '';
+        }
+        if (block.content?.fontFamily !== fontRef.current) {
+            setLocalFont(block.content?.fontFamily || 'modern');
+            fontRef.current = block.content?.fontFamily || 'modern';
+        }
+    }, [block.content?.text, block.content?.marks, block.content?.fontFamily]);
 
     // Focus handling
     useEffect(() => {
@@ -61,32 +86,42 @@ export function TextBlock({ block, onChange, onKeyDown, autoFocus, placeholder, 
             textarea.style.height = 'auto';
             textarea.style.height = `${textarea.scrollHeight}px`;
         }
-    }, [text, isEditing]);
+    }, [localText, isEditing]);
 
-    // Handle text changes + mark adjustment - IMMEDIATE state update
+    // Handle text changes + mark adjustment - IMMEDIATE LOCAL state update
     const handleChange = (e) => {
         const newText = e.target.value;
-        const delta = newText.length - text.length;
-        const cursor = e.target.selectionStart;
-        const changeIndex = delta > 0 ? cursor - delta : cursor;
 
-        // Adjust existing marks immediately
-        const newMarks = adjustMarks(marks, changeIndex, delta);
+        // Use the new precise mark diff adjuster to handle multi-line pasting gracefully
+        const newMarks = adjustMarksForChange(localMarks, localText, newText);
 
-        // Dispatch state update immediately (no debounce on state, only on save)
-        onChange({
-            ...block.content,
-            text: newText,
-            marks: newMarks
+        // Update local state instantly so the UI feels native
+        setLocalText(newText);
+        setLocalMarks(newMarks);
+        textRef.current = newText;
+
+        // Dispatch expensive React propagation via startTransition so it doesn't block the visual paint
+        startTransition(() => {
+            onChange({
+                ...block.content,
+                text: newText,
+                marks: newMarks,
+                fontFamily: localFont
+            });
         });
     };
 
-    // Handle style changes from floating menu - IMMEDIATE update
+    // Handle style changes from floating menu
     const handleStyleChange = useCallback((newMarks) => {
-        // Immediately update state - this triggers re-render and autosave
-        onChange({
-            ...block.content,
-            marks: newMarks
+        setLocalMarks(newMarks);
+
+        startTransition(() => {
+            onChange({
+                ...block.content,
+                text: localText,
+                marks: newMarks,
+                fontFamily: localFont
+            });
         });
 
         // Restore focus after style update
@@ -96,7 +131,20 @@ export function TextBlock({ block, onChange, onKeyDown, autoFocus, placeholder, 
                 textareaRef.current.setSelectionRange(localSelection.start, localSelection.end);
             }
         });
-    }, [block.content, onChange, localSelection]);
+    }, [block.content, onChange, localSelection, localText, localFont]);
+
+    const handleFontChange = (newFont) => {
+        setLocalFont(newFont);
+        fontRef.current = newFont;
+        startTransition(() => {
+            onChange({
+                ...block.content,
+                text: localText,
+                marks: localMarks,
+                fontFamily: newFont
+            });
+        });
+    };
 
     // Track selection for style menu
     const handleSelect = (e) => {
@@ -106,8 +154,44 @@ export function TextBlock({ block, onChange, onKeyDown, autoFocus, placeholder, 
         });
     };
 
-    // Handle keyboard shortcuts - IMMEDIATE update
+    // Handle keyboard shortcuts
     const handleKeyDown = (e) => {
+        // Explicitly handle Ctrl+Enter for newline injection within the exact same block
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+
+            const start = e.target.selectionStart;
+            const end = e.target.selectionEnd;
+            const newText = localText.substring(0, start) + '\n' + localText.substring(end);
+
+            // Adjust markers around the new explicit line break
+            const newMarks = adjustMarksForChange(localMarks, localText, newText);
+
+            setLocalText(newText);
+            setLocalMarks(newMarks);
+            textRef.current = newText;
+
+            // Push changes down pipeline
+            startTransition(() => {
+                onChange({
+                    ...block.content,
+                    text: newText,
+                    marks: newMarks,
+                    fontFamily: localFont
+                });
+            });
+
+            // Resync caret to line below instantly
+            requestAnimationFrame(() => {
+                if (textareaRef.current) {
+                    textareaRef.current.selectionStart = start + 1;
+                    textareaRef.current.selectionEnd = start + 1;
+                }
+            });
+
+            return;
+        }
+
         if (e.ctrlKey || e.metaKey) {
             const key = e.key.toLowerCase();
             if (['b', 'i', 'u'].includes(key)) {
@@ -119,18 +203,22 @@ export function TextBlock({ block, onChange, onKeyDown, autoFocus, placeholder, 
 
                 if (start === end) return;
 
-                const isStyled = marks.some(m =>
+                const isStyled = localMarks.some(m =>
                     m.type === type && m.start <= start && m.end >= end
                 );
 
                 const newMarks = isStyled
-                    ? removeMark(marks, type, start, end)
-                    : applyMark(marks, type, start, end);
+                    ? removeMark(localMarks, type, start, end)
+                    : applyMark(localMarks, type, start, end);
 
-                // Immediate state update
-                onChange({
-                    ...block.content,
-                    marks: newMarks
+                setLocalMarks(newMarks);
+
+                startTransition(() => {
+                    onChange({
+                        ...block.content,
+                        marks: newMarks,
+                        fontFamily: localFont
+                    });
                 });
                 return;
             }
@@ -147,17 +235,19 @@ export function TextBlock({ block, onChange, onKeyDown, autoFocus, placeholder, 
         setIsEditing(false);
     };
 
+    const activeFontVar = FONT_VARIABLES[localFont] || FONT_VARIABLES.inter;
+
     // View Mode or Read-Only Mode
     if ((!isEditing && !autoFocus) || readOnly) {
         return (
             <div
                 onClick={!readOnly ? handleClick : undefined}
-                className={`min-h-7 py-1.5 outline-none text-base leading-relaxed break-all whitespace-pre-wrap 
+                className={`min-h-7 py-1.5 outline-none text-base leading-relaxed wrap-break-word whitespace-pre-wrap 
                     ${!readOnly ? 'cursor-text' : ''} ${className || ''}`}
-                style={{ color: 'var(--color-text-primary)' }}
+                style={{ color: 'var(--color-text-primary)', fontFamily: activeFontVar }}
             >
-                {text ? (
-                    <RichText text={text} marks={marks} />
+                {localText ? (
+                    <RichText text={localText} marks={localMarks} />
                 ) : (
                     // Always show placeholder in edit mode (when empty), but NOT in read-only
                     !readOnly && (
@@ -175,12 +265,12 @@ export function TextBlock({ block, onChange, onKeyDown, autoFocus, placeholder, 
         <div className="relative">
             {/* Visible Layer: Styled text overlay */}
             <div
-                className={`min-h-7 py-1.5 text-base leading-relaxed break-all whitespace-pre-wrap pointer-events-none ${className || ''}`}
-                style={{ color: 'var(--color-text-primary)' }}
+                className={`min-h-7 py-1.5 px-0 text-base leading-relaxed wrap-break-word whitespace-pre-wrap pointer-events-none ${className || ''}`}
+                style={{ color: 'var(--color-text-primary)', fontFamily: activeFontVar }}
                 aria-hidden="true"
             >
-                {text ? (
-                    <RichText text={text} marks={marks} />
+                {localText ? (
+                    <RichText text={localText} marks={localMarks} />
                 ) : (
                     <span style={{ color: 'var(--color-text-muted)' }} className="italic">{placeholder || 'Type / for commands'}</span>
                 )}
@@ -189,7 +279,7 @@ export function TextBlock({ block, onChange, onKeyDown, autoFocus, placeholder, 
             {/* Input Layer: Transparent textarea for input capture */}
             <textarea
                 ref={textareaRef}
-                value={text}
+                value={localText}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
@@ -198,17 +288,20 @@ export function TextBlock({ block, onChange, onKeyDown, autoFocus, placeholder, 
                 autoFocus={autoFocus || isEditing}
                 placeholder=""
                 className={`absolute inset-0 w-full h-full bg-transparent resize-none overflow-hidden 
-                           outline-none text-transparent selection:bg-lavender/30
+                           outline-none text-transparent selection:bg-lavender/30 border-none m-0
+                           text-base px-0 leading-relaxed wrap-break-word whitespace-pre-wrap
                            min-h-7 py-1.5 ${className || ''}`}
-                style={{ caretColor: 'var(--color-lavender, #E4C1F9)' }}
+                style={{ caretColor: 'var(--color-text-primary, #1f2937)', fontFamily: activeFontVar }}
                 rows={1}
             />
 
             {/* Floating Style Menu - appears on text selection */}
             <FloatingStyleMenu
                 targetRef={textareaRef}
-                marks={marks}
+                marks={localMarks}
                 onStyleChange={handleStyleChange}
+                fontFamily={localFont}
+                onFontChange={handleFontChange}
                 applyMark={applyMark}
                 removeMark={removeMark}
             />

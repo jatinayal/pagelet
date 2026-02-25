@@ -57,7 +57,7 @@ export default function LoginPage() {
             {/* Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white shadow-sm border border-gray-100 mb-4">
-                    <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain " />
+                    <img src="/logo.webp" alt="Logo" className="w-8 h-8 object-contain " />
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                     Welcome back

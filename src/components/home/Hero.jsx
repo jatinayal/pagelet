@@ -55,7 +55,7 @@ export default function Hero() {
                             Get Started
                         </Link>
                         <Link
-                            href="#"
+                            href="https://pagelet.vercel.app/public/699df7827b7b2853ba8484af"
                             className="w-full sm:w-auto px-7 py-3.5 text-base font-semibold text-gray-700 bg-white/60 backdrop-blur-sm border border-gray-200/60 rounded-2xl hover:bg-white hover:-translate-y-0.5 transition-all duration-300 shadow-sm text-center"
                         >
                             View Live Demo

@@ -11,7 +11,7 @@ export default function Footer() {
                     <div className="col-span-1 md:col-span-1">
                         <Link href="/" className="flex items-center gap-2 mb-4 group">
                             <div className="w-10 h-10 relative">
-                                <Image src="/logo.png" alt="Logo" fill className="object-contain " />
+                                <Image src="/logo.webp" alt="Logo" fill className="object-contain " />
                             </div>
                             <span className="text-xl font-bold text-gray-900">Pagelet</span>
                         </Link>

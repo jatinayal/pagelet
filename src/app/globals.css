@@ -58,6 +58,9 @@
     --color-foreground: var(--color-text-primary);
     --font-sans: var(--font-geist-sans);
     --font-mono: var(--font-geist-mono);
+    --font-modern: var(--font-modern);
+    --font-serif: var(--font-serif);
+    --font-mono: var(--font-mono);
 }
 
 body {

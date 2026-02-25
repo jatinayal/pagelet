@@ -219,7 +219,7 @@ export function Sidebar({
             {/* Expand Button - visible when collapsed */}
             <button
                 onClick={onToggle}
-                className={`fixed top-4 cursor-pointer left-4 z-40 p-2.5 rounded-xl transition-all duration-300 ease-in-out
+                className={`fixed top-4 cursor-pointer left-4 z-60 p-2.5 rounded-xl transition-all duration-300 ease-in-out
                           ${isCollapsed ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                 style={{
                     background: 'rgba(255, 255, 255, 0.7)',
