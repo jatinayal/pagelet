@@ -2,10 +2,12 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link as LinkIcon, ExternalLink, Calculator, X, Check } from 'lucide-react';
 
 export default function LinkBlock({ block, onChange, readOnly }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [menuPosition, setMenuPosition] = useState(null);
     const [tempUrl, setTempUrl] = useState(block.content?.url || '');
     const [tempText, setTempText] = useState(block.content?.text || 'Link');
 
@@ -35,6 +37,17 @@ export default function LinkBlock({ block, onChange, readOnly }) {
         setTempUrl(block.content?.url || '');
         setTempText(block.content?.text || 'Link');
     }, [block.content]);
+
+    // Calculate absolute position on document when opening menu
+    useEffect(() => {
+        if (isMenuOpen && containerRef.current && typeof window !== 'undefined') {
+            const rect = containerRef.current.getBoundingClientRect();
+            setMenuPosition({
+                top: rect.top + window.scrollY + rect.height + 8,
+                left: rect.left + window.scrollX
+            });
+        }
+    }, [isMenuOpen]);
 
     const handleSave = () => {
         onChange({
@@ -89,13 +102,15 @@ export default function LinkBlock({ block, onChange, readOnly }) {
                 </a>
             </div>
 
-            {/* The Lite Menu (Popover) */}
-            {isMenuOpen && !readOnly && (
+            {/* The Lite Menu (Popover via Portal) */}
+            {isMenuOpen && !readOnly && menuPosition && typeof document !== 'undefined' && createPortal(
                 <div
                     ref={menuRef}
-                    className="absolute top-12 left-0 z-20 w-80 bg-white/70 backdrop-blur-sm border border-white/20 
+                    className="absolute z-49 w-80 bg-white/90 backdrop-blur-xl border border-white/20 
                         rounded-xl shadow-xl p-4 animate-in fade-in zoom-in-95 duration-200"
                     style={{
+                        top: menuPosition.top,
+                        left: menuPosition.left,
                         boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)'
                     }}
                 >
@@ -152,7 +167,8 @@ export default function LinkBlock({ block, onChange, readOnly }) {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

@@ -118,14 +118,16 @@ export default function ImageBlock({ block, onChange, readOnly }) {
                     )}
                 </div>
 
-                <input
-                    type="text"
-                    value={caption}
-                    onChange={handleCaptionChange}
-                    placeholder="Write a caption..."
-                    readOnly={readOnly}
-                    className="w-full text-sm text-gray-500 bg-transparent outline-none mt-1.5 text-center"
-                />
+                {(!readOnly || (caption && caption.trim() !== '' && caption !== 'Write a caption...')) && (
+                    <input
+                        type="text"
+                        value={caption}
+                        onChange={handleCaptionChange}
+                        placeholder="Write a caption..."
+                        readOnly={readOnly}
+                        className="w-full text-sm text-gray-500 bg-transparent outline-none mt-1.5 text-center"
+                    />
+                )}
             </div>
         );
     }
